@@ -1,0 +1,18 @@
+{
+  "name": "modbusstream",
+  "version": "1.0.0",
+  "description": "Uses modbus stream to control PLCs",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Elizabeth Adelaide",
+  "license": "ISC",
+  "dependencies": {
+    "body-parser": "1.18.3",
+    "express": "4.16.3",
+    "jsmodbus": "3.1.0",
+    "node-nmap": "4.0.0",
+    "util": "0.11.0"
+  }
+}

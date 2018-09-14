@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html>
+<link rel="stylesheet" href="style.css">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.5.17/vue.min.js"></script>
+
+
+<script src="client.js" defer></script>
+
+
+<body>
+
+<h1>PLC Control</h1>
+
+<div id="wrapper">
+
+
+<div class="plcMonitor">
+<div class="inner">
+<p>PLC Number 1</p>
+<h1 id="plcCurrentZero">Loading client...</h1>
+<button id="buttonPowerZero">Power</button>
+</div>
+</div>
+
+<div class="plcMonitor">
+<div class="inner">
+<p>PLC Number 2</p>
+<h1 id="plcCurrentOne">Not Connected</h1>
+<button id="buttonPowerOne">Power</button>
+</div>
+</div>
+
+<div class="plcMonitor">
+<div class="inner">
+<p>PLC Number 3</p>
+<h1 id="plcCurrentTwo">Not Connected</h1>
+<button id="buttonPowerTwo">Power</button>
+</div>
+</div>
+
+<div class="plcMonitor">
+<div class="inner">
+<p>PLC Number 4</p>
+<h1 id="plcCurrentThree">Not Connected</h1>
+<button id="buttonPowerThree">Power</button>
+</div>
+</div>
+
+<div class="plcMonitor">
+<div class="inner">
+<p>PLC Number 5</p>
+<h1 id="plcCurrentFour">Not Connected</h1>
+<button id="buttonPowerFour">Power</button>
+</div>
+</div>
+
+<div class="plcMonitor">
+<div class="inner">
+<p>PLC Number 6</p>
+<h1 id="plcCurrentFive">Not Connected</h1>
+<button id="buttonPowerFive">Power</button>
+</div>
+</div>
+
+<div class="plcMonitor">
+<div class="inner">
+<p>PLC Number 7</p>
+<h1 id="plcCurrentSix">Not Connected</h1>
+<button id="buttonPowerSix">Power</button>
+</div>
+</div>
+
+<div class="plcMonitor">
+<div class="inner">
+<p>PLC Number 8</p>
+<h1 id="plcCurrentSeven">Not Connected</h1>
+<button id="buttonPowerSeven">Power</button>
+</div>
+</div>
+
+<div class="plcMonitor">
+<div class="inner">
+<p>PLC Number 9</p>
+<h1 id="plcCurrentEight">Not Connected</h1>
+<button id="buttonPowerEight">Power</button>
+</div>
+</div>
+
+<div class="plcMonitor">
+<div class="inner">
+<p>PLC Number 10</p>
+<h1 id="plcCurrentNine">Not Connected</h1>
+<button id="buttonPowerNine">Power</button>
+</div>
+</div>
+
+<!--
+<button id="buttonPLCOn" class="on">Turn on</button>
+<button id="buttonPLCOff">Turn off</button>
+</div>
+-->
+
+<button id="buttonNetworkCheck">Scan Ips</button>
+<p id="iplist"></p>
+
+<!--
+<form action="/set_ip" method="Post" target="dummyframe">
+    <input type="text" name="myip" value="0.0.0.0" required />
+    <input type="submit" value="Submit" />
+</form>
+-->
+</div>
+
+<!-- Dummy frame allows form to sent without redirect, without js-->
+<iframe width="0" height="0" border="0" name="dummyframe" id="dummyframe"></iframe>
+
+</body>
+</html>
