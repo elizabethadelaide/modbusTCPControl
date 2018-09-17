@@ -1,11 +1,32 @@
 'use strict'
 
 /********************Setup***********************************/
-//PLC Addresses
+//PLC Addressses
+
+//Addresses are set in process.env:
+
+//Format:
+//CURRENT=4184
+//ALARM=3
+//NETWORK=4174
+//VERBOSE=true
+
+require('dotenv').load() //load process environment variables
+
+//Addresses are offsets
 const addressDict = {
-  'currentFloat'  : 28693, //Holding Register
-  'alarm'         : 2, //Coil Read only
-  'networkPower'  : 8194  //Coil R/W
+  'currentFloat'  : process.env.CURRENT, //Holding Register
+  'alarm'         : process.env.ALARM, //Coil Read only
+  'networkPower'  : process.env.NETWORK  //Coil R/W
+}
+
+const verbose = process.env.VERBOSE == 'true'
+
+if (verbose){
+  console.log("Running in verbose mode")
+}
+else{
+  console.log("Not running in verbose mode")
 }
 
 //Express manages server/client communications
@@ -144,21 +165,6 @@ app.get('/scan_ips', async function(req, res, next){
   }
 })
 
-//Set ip for socket
-/*app.post('/set_ip', async function(req, res, next){
-  var myip = req.body.myip //body parsed from form
-  console.log("Received ip: ", myip)
-  options = {
-    'host': myip,
-    'port': '502'
-  }
-  try{
-    res.status(201).json(await socket.connect(options));
-  } catch(err){
-    next(err)
-  }
-})*/
-
 /*Coils are 000000 to 09999*/
 app.get('/readCoil/:id/:address', async function(req, res, next) {
   try{
@@ -248,13 +254,8 @@ app.get('/readHoldingRegisterFloat/:id/:address', async function(req, res, next)
 
 //Send status 500 on next(err)
 app.use(function(err, req, res, next) {
-  //console.error(err) //uncomment for verbose error reporting
+  if(verbose){
+    console.error(err); //uncomment for verbose error reporting
+  }
   res.status(500).json({message: 'an error occurred'})
 })
-
-//Connect to socket
-//socket.connect(options) //connect to socket with ip and port
-
-
-
-//Does read and write to coil, BUT might have off by one errors?
