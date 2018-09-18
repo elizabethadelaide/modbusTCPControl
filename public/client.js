@@ -20,13 +20,14 @@ May be like best on server...
 Post commands are just sent and forgotten
 */
 function doPost(cmd){
+  //console.log(cmd);
   fetch(cmd, {method: 'POST'})
     .then(function(response){
       if (response.ok){
-        //console.log("Did post cmd: ", cmd);
+        console.log("Did post cmd: ", cmd);
         return;
       }
-      throw new Error('Request failed');
+      throw new Error('Request failed: ' + cmd);
     })
     .catch(function(error){
       console.log(error);
@@ -54,7 +55,7 @@ function doGet(cmd){
     fetch(cmd, {method: 'GET'})
     .then(function(response){
       if (response.ok) return response.json();
-      throw new Error('request failed');
+      throw new Error('request failed: ' + cmd);
     })
     .then(function(data){
       //console.log(data._valuesAsArray._body);
@@ -68,31 +69,54 @@ function doGet(cmd){
 }
 /***********/
 
+const myTimeInterval = 500; //timing of requests
+const reversePowerSwitch = true;
+
 setupMonitor('plcCurrentZero', 0);
-/*setupMonitor('plcCurrentOne', 1);
+setupMonitor('plcCurrentOne', 1);
 setupMonitor('plcCurrentTwo', 2);
 setupMonitor('plcCurrentThree', 3);
 setupMonitor('plcCurrentFour', 4);
-setupMonitor('plcCurrentFive', 5);
+/*setupMonitor('plcCurrentFive', 5);
 setupMonitor('plcCurrentSix', 6);
 setupMonitor('plcCurrentSeven', 7);
 setupMonitor('plcCurrentEight', 8);
 setupMonitor('plcCurrentNine', 9);*/
 
+setIp('plcNameZero', 0)
+setIp('plcNameOne', 1)
+setIp('plcNameTwo', 2)
+setIp('plcNameThree', 3)
+setIp('plcNameFour', 4)
+/*setIp('plcNameFive', 5)
+setIp('plcNameSix', 6)
+setIp('plcNameSeven', 7)
+setIp('plcNameEight', 8)
+setIp('plcNameNine', 9)*/
+
 setupPowerControl('buttonPowerZero', 0);
-setupPowerControl('buttonPowerOne', 1)
-/*setupPowerControl('buttonPowerTwo', 2)
+setupPowerControl('buttonPowerOne', 1);
+setupPowerControl('buttonPowerTwo', 2)
 setupPowerControl('buttonPowerThree', 3)
 setupPowerControl('buttonPowerFour', 4)
-setupPowerControl('buttonPowerFive', 5)
+/*setupPowerControl('buttonPowerFive', 5)
 setupPowerControl('buttonPowerSix', 6)
 setupPowerControl('buttonPowerSeven', 7)
 setupPowerControl('buttonPowerEight', 8)
 setupPowerControl('buttonPowerNine', 9)*/
 
+function setIp(elementName, id){
+  setInterval(async function(){
+    ipCmd = 'getIp/' + id;
+    ip = await doGet(ipCmd);
+    plcText = "PLC " + (id + 1) + " @ " + ip;
+    document.getElementById(elementName).innerHTML = plcText;
+  }, 4000);
+}
 
 //Monitor PLC status
 function setupMonitor(elementName, id){
+
 
   setInterval(async function(){
 
@@ -100,7 +124,6 @@ function setupMonitor(elementName, id){
     dataCmd = 'readHoldingRegisterFloat/' + id + '/currentFloat';
 
     currentData = await doGet(dataCmd);
-
     //console.log(data._body._valuesAsArray);
 
     if (currentData == -1 || currentData === undefined){
@@ -116,13 +139,13 @@ function setupMonitor(elementName, id){
       var FAN_ALARM = alarm._body._valuesAsArray[1];
       var OTP_ALARM = alarm._body._valuesAsArray[2];
 
-      if (AC_ALARM === 1){
+      if (AC_ALARM == 1){
         document.getElementById(elementName).innerHTML = "Error: AC Alarm";
       }
-      else if (FAN_ALARM === 1){
+      else if (FAN_ALARM == 1){
         document.getElementById(elementName).innerHTML = "Error: Fan Alarm";
       }
-      else if (OTP_ALARM === 1){
+      else if (OTP_ALARM == 1){
         document.getElementById(elementName).innerHTML = "Error: OTP Alarm";
       }
       else{
@@ -130,35 +153,58 @@ function setupMonitor(elementName, id){
         document.getElementById(elementName).innerHTML = currentData.toString().substring(0, 6) + ' A';
       }
     }
-  },500);
+  }, myTimeInterval);
+}
+
+function doReverseCoils(value){
+  if (reversePowerSwitch){
+    value = 1 - value;
+    return value;
+  }
+  return value;
 }
 
 function setupPowerControl(elementName, id){
   const myButton = document.getElementById(elementName);
+
+  //Check power register occasionally
+  setInterval(async function(){
+    var readCmd = '/readCoil/' + id + '/networkPower/';
+    await doGet(readCmd)
+      .then(async function(data){
+        currentValue = data._body._valuesAsArray[0];
+        if (currentValue === 1){
+          newValue = 'false';
+          if (reversePowerSwitch)
+            newText = 'Turn Off'
+          else
+            newText = 'Turn On';
+        }
+        else{
+          newValue = 'true';
+          if (reversePowerSwitch)
+            newText = 'Turn On'
+          else
+            newText = 'Turn Off';
+        }
+        document.getElementById(elementName).innerHTML = newText;
+    })
+  }
+  , 1000)
 
   myButton.addEventListener('click', async function(e){
     var readCmd = '/readCoil/' + id + '/networkPower/';
     await doGet(readCmd)
     .then(async function(data){
       currentValue = data._body._valuesAsArray[0];
-      console.log(data, currentValue);
-      if (currentValue === 1){
-        var p//Monitor PLC status
-/*setInterval(async function(){
-  data = await doGet('/readCoil/0/8194')
-
-  //console.log(data._body._valuesAsArray);
-
-  if (data == -1 || data === undefined){
-    document.getElementById('plcNetworkOn').innerHTML = 'Response: Error connecting to PLC';
-  }
-  else{
-    bit = data._body._valuesAsArray[0];
-    document.getElementById('plcNetworkOn').innerHTML = 'Network Control: ' + bit;
-  }
-}, 500);*/rompt = "Power off PLC # " + (id + 1) + "?"
+      //console.log(data, currentValue);
+      if (reversePowerSwitch){
+        checkValue = 1 - currentValue;
       }
-      else if (currentValue === 0){
+      if (checkValue === 1){
+        var prompt = "Power off PLC # " + (id + 1) + "?"
+      }
+      else if (checkValue === 0){
         var prompt = "Power on PLC # " + (id + 1) + "?"
       }
       else{
@@ -168,11 +214,17 @@ function setupPowerControl(elementName, id){
       if (window.confirm(prompt)){
         if (currentValue === 1){
           newValue = 'false';
-          newText = 'Turn On';
+          if (reversePowerSwitch)
+            newText = 'Turn Off'
+          else
+            newText = 'Turn On';
         }
         else{
           newValue = 'true';
-          newText = 'Turn Off';
+          if (reversePowerSwitch)
+            newText = 'Turn On'
+          else
+            newText = 'Turn Off';
         }
         var pwrCmd = '/writeCoil/' + id + '/networkPower/' + newValue;
         await doPost(pwrCmd)
