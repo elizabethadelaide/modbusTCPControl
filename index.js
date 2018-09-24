@@ -4,7 +4,7 @@
 //PLC Addressses
 
 //Addresses are set in process.env:
-
+//Addresses are offset not absolute
 //Format:
 //CURRENT=4184
 //ALARM=3
@@ -15,9 +15,11 @@ require('dotenv').load() //load process environment variables from file
 
 //Addresses are offsets
 const addressDict = {
-  'currentFloat'  : process.env.CURRENT, //Holding Register
-  'alarm'         : process.env.ALARM, //Coil Read only
-  'networkPower'  : process.env.NETWORK  //Coil R/W
+  'currentFloat'  : process.env.DFCURRENT, //Holding Register
+  'alarm'         : process.env.COILALARM, //Coil Read only
+  'networkPower'  : process.env.COILNETWORK,  //Coil R/W
+  'tempOne'       : process.env.DFTHERMOONE, //thermocouples
+  'tempTwo'       : process.env.DFTHERMOTWO
 }
 
 const verbose = (process.env.VERBOSE == 'true')
@@ -60,9 +62,26 @@ let net = require('net')
 
 var socketList = [] //contains IDs, options and net.sockets
 
+function clearSockets(){
+  console.log("Clearing n sockets: ", socketList.length)
+  for (var i = 0; i < socketList.length; i++){
+    try{
+      console.log("Socket methods: ", Object.getOwnPropertNames(socketList[i].socket))
+      socketList[i].socket.end()
+      socketList[i].client.close()
+    }
+    catch{
+      console.error("Socket error")
+    }
+  }
+  //socketList = [];
+}
+
 
 function setupSockets(sock_ips){
   console.log("Connecting to n ips:", sock_ips.length)
+
+  clearSockets()
 
   //TODO: Error check here if iplist is correct length:
 
@@ -134,13 +153,15 @@ iplist['ip'] = [] //needs to be an object to stringify the json later on POST
 
 //setup nmapscan behavior
 nmapscan.on('complete', function(data){
+  iplist = {};
+  iplist['ip'] = []
   for (var i = 0; i < data.length; i++){
     var host = data[i]
     var out = []
     if (! (host.openPorts === undefined || host.openPorts.length == 0)){
       //Only hosts with open TCP ports
       console.log(host)
-      iplist['ip'].push(host.ip) //create list of open IPs
+      iplist['ip'].push(host.ip) //create list of open IPshttps://www.automationdirect.com/adc/Technical/Catalog/Programmable_Controllers/CLICK_Series_PLCs_(Stackable_Micro_Brick)/Analog_I-z-O
     }
   }
   console.log(iplist)
@@ -163,14 +184,15 @@ const setTimeoutPromise = util.promisify(setTimeout);
 app.get('/scan_ips', async function(req, res, next){
   console.log("Scanning ips")
   try{
+
     nmapscan.startScan()
-    console.log(iplist)
     console.log(nmapscan.scanTime)
 
     //Wait 4 seconds for nmap to finish
     //Nmap library isn't setup to be used as a single async block
     //This makes it easier to just do one request and wait
-    res.json(await setTimeoutPromise(4000).then(() => {
+    //correct way is to have client request until nmap is done.
+    res.json(await setTimeoutPromise(5000).then(() => {
       return iplist
     }))
   }
@@ -184,7 +206,6 @@ app.get('/readCoil/:id/:address', async function(req, res, next) {
   try{
     //console.log(socketList[req.params.id])
     res.json(await
-
       getClient(req.params.id)
         //Modbus addresss is one off for coils
         //Library returns in bytes

@@ -1,17 +1,5 @@
 console.log("Running client js code");
 
-//TODO:
-/*
-Nicer function constructor
-
-with dictionary of addresses
-
-function names etc.
-
-May be like best on server...
-*/
-
-
 /*****************Functions:**********************/
 //Functions are laid out in index.js as express.js functions
 
@@ -30,7 +18,7 @@ function doPost(cmd){
       throw new Error('Request failed: ' + cmd);
     })
     .catch(function(error){
-      console.log(error);
+      //console.log(error);
       return -1;
     })
 }
@@ -47,7 +35,6 @@ myFunction(async function(){
   ....use data here....
 })
 
-Could write a wrapper around it also later...
 */
 function doGet(cmd){
 
@@ -62,8 +49,8 @@ function doGet(cmd){
       return mydata(data);
     })
     .catch(function(error){
-      console.log(error);
-      return -1;
+      //console.log(error);
+      mydata(undefined);
     });
   })
 }
@@ -77,40 +64,47 @@ setupMonitor('plcCurrentOne', 1);
 setupMonitor('plcCurrentTwo', 2);
 setupMonitor('plcCurrentThree', 3);
 setupMonitor('plcCurrentFour', 4);
-/*setupMonitor('plcCurrentFive', 5);
+setupMonitor('plcCurrentFive', 5);
 setupMonitor('plcCurrentSix', 6);
 setupMonitor('plcCurrentSeven', 7);
 setupMonitor('plcCurrentEight', 8);
-setupMonitor('plcCurrentNine', 9);*/
+setupMonitor('plcCurrentNine', 9);
 
-setIp('plcNameZero', 0)
-setIp('plcNameOne', 1)
-setIp('plcNameTwo', 2)
-setIp('plcNameThree', 3)
-setIp('plcNameFour', 4)
-/*setIp('plcNameFive', 5)
-setIp('plcNameSix', 6)
-setIp('plcNameSeven', 7)
-setIp('plcNameEight', 8)
-setIp('plcNameNine', 9)*/
+setIp('plcNameZero', 0);
+setIp('plcNameOne', 1);
+setIp('plcNameTwo', 2);
+setIp('plcNameThree', 3);
+setIp('plcNameFour', 4);
+setIp('plcNameFive', 5);
+setIp('plcNameSix', 6);
+setIp('plcNameSeven', 7);
+setIp('plcNameEight', 8);
+setIp('plcNameNine', 9);
 
 setupPowerControl('buttonPowerZero', 0);
 setupPowerControl('buttonPowerOne', 1);
-setupPowerControl('buttonPowerTwo', 2)
-setupPowerControl('buttonPowerThree', 3)
-setupPowerControl('buttonPowerFour', 4)
-/*setupPowerControl('buttonPowerFive', 5)
-setupPowerControl('buttonPowerSix', 6)
-setupPowerControl('buttonPowerSeven', 7)
-setupPowerControl('buttonPowerEight', 8)
-setupPowerControl('buttonPowerNine', 9)*/
+setupPowerControl('buttonPowerTwo', 2);
+setupPowerControl('buttonPowerThree', 3);
+setupPowerControl('buttonPowerFour', 4);
+setupPowerControl('buttonPowerFive', 5);
+setupPowerControl('buttonPowerSix', 6);
+setupPowerControl('buttonPowerSeven', 7);
+setupPowerControl('buttonPowerEight', 8);
+setupPowerControl('buttonPowerNine', 9);
+
+temperatureMonitor('plcTemperatureZero', 0);
 
 function setIp(elementName, id){
   setInterval(async function(){
     ipCmd = 'getIp/' + id;
     ip = await doGet(ipCmd);
-    plcText = "PLC " + (id + 1) + " @ " + ip;
-    document.getElementById(elementName).innerHTML = plcText;
+    if (ip == -1 || ip === undefined){
+      document.getElementById(elementName).innerHTML = "PLC " + (id + 1);
+    }
+    else{
+      plcText = "PLC " + (id + 1) + " @ " + ip;
+      document.getElementById(elementName).innerHTML = plcText;
+    }
   }, 4000);
 }
 
@@ -123,11 +117,12 @@ function setupMonitor(elementName, id){
     //Can put this all into one JSON request
     dataCmd = 'readHoldingRegisterFloat/' + id + '/currentFloat';
 
-    currentData = await doGet(dataCmd);
-    //console.log(data._body._valuesAsArray);
+    currentData = await doGet(dataCmd)
+
+    //console.log("Received current Data:", currentData);
 
     if (currentData == -1 || currentData === undefined){
-      document.getElementById(elementName).innerHTML = 'Response: Error connecting to PLC';
+      document.getElementById(elementName).innerHTML = 'Error connecting to PLC';
     }
     else{
       alarmCmd = 'readCoil/' + id + '/alarm';
@@ -150,18 +145,29 @@ function setupMonitor(elementName, id){
       }
       else{
         //console.log(bits)
-        document.getElementById(elementName).innerHTML = currentData.toString().substring(0, 6) + ' A';
+        document.getElementById(elementName).innerHTML = currentData.toFixed(3) + ' A';
       }
     }
   }, myTimeInterval);
 }
 
-function doReverseCoils(value){
-  if (reversePowerSwitch){
-    value = 1 - value;
-    return value;
+function powerText(value){
+  if (value == 1){
+    if (reversePowerSwitch){
+      return 'Current Power Status: <span class="textoff">Off</span>';
+    }
+    else{
+      return 'Current Power Status: <span class="texton">On</span>';
+    }
   }
-  return value;
+  else{
+    if (reversePowerSwitch){
+      return 'Current Power Status: <span class="texton">On</span>';
+    }
+    else{
+      return 'Current Power Status: <span class="textoff">Off</span>';
+    }
+  }
 }
 
 function setupPowerControl(elementName, id){
@@ -173,21 +179,10 @@ function setupPowerControl(elementName, id){
     await doGet(readCmd)
       .then(async function(data){
         currentValue = data._body._valuesAsArray[0];
-        if (currentValue === 1){
-          newValue = 'false';
-          if (reversePowerSwitch)
-            newText = 'Turn Off'
-          else
-            newText = 'Turn On';
-        }
-        else{
-          newValue = 'true';
-          if (reversePowerSwitch)
-            newText = 'Turn On'
-          else
-            newText = 'Turn Off';
-        }
+        newText = powerText(currentValue)
         document.getElementById(elementName).innerHTML = newText;
+    }).catch(function(err){
+      document.getElementById(elementName).innerHTML = 'Error connecting to PLC';
     })
   }
   , 1000)
@@ -196,6 +191,9 @@ function setupPowerControl(elementName, id){
     var readCmd = '/readCoil/' + id + '/networkPower/';
     await doGet(readCmd)
     .then(async function(data){
+      if (data === undefined){
+        throw new Error("No connection to PLC");
+      }
       currentValue = data._body._valuesAsArray[0];
       //console.log(data, currentValue);
       if (reversePowerSwitch){
@@ -212,29 +210,46 @@ function setupPowerControl(elementName, id){
         return -1;
       }
       if (window.confirm(prompt)){
-        if (currentValue === 1){
+        if (currentValue == 1){
           newValue = 'false';
-          if (reversePowerSwitch)
-            newText = 'Turn Off'
-          else
-            newText = 'Turn On';
         }
         else{
           newValue = 'true';
-          if (reversePowerSwitch)
-            newText = 'Turn On'
-          else
-            newText = 'Turn Off';
         }
+        newText = powerText(currentValue);
         var pwrCmd = '/writeCoil/' + id + '/networkPower/' + newValue;
         await doPost(pwrCmd)
         document.getElementById(elementName).innerHTML = newText;
       }
-    }).then(doPost)
+    })
+    .catch(function (err){
+      console.log(err);
+    })
   })
 }
 
+//For monitoring thermocouple status
+function temperatureMonitor(elementName, id){
+  setInterval(async function(){
+    tempOneCmd = 'readHoldingRegisterFloat/' + id + '/tempOne';
+    tempTwoCmd = 'readHoldingRegisterFloat/' + id + '/tempTwo';
+
+    tempOne = await doGet(tempOneCmd);
+
+    if (tempOne == -1  || tempOne === undefined){
+      document.getElementById(elementName).innerHTML = "Error connecting to PLC";
+    }
+    else{
+      tempTwo = await doGet(tempTwoCmd);
+      stringTempOne = "<h2>Temp One: " + tempOne.toFixed(3) + "&deg;F</h2>";
+      stringTempTwo = "<h2>Temp Two: " + tempTwo.toFixed(3) + "&deg;F</h2>";
+      document.getElementById(elementName).innerHTML = stringTempOne + stringTempTwo;
+    }
+  }, 2000);
+}
+
 //Get PLCs on network
+
 const networkCheckButton = document.getElementById('buttonNetworkCheck')
 
 networkCheckButton.addEventListener('click', async function(e){
@@ -242,5 +257,5 @@ networkCheckButton.addEventListener('click', async function(e){
   document.getElementById('iplist').innerHTML = 'Scanning network'
 
   data = await doGet('/scan_ips')
-  document.getElementById('iplist').innerHTML = 'Available Ips: ' + data.ip;
+  document.getElementById('iplist').innerHTML = 'Available Ips: <br>' + data.ip.toString().replace(/,/g, "<br>");
 })

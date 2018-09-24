@@ -40,6 +40,7 @@ button{
   height: auto;
   font-size:1.5em;
   margin:4%;
+  cursor:pointer;
 }
 
 button.on{
@@ -52,4 +53,12 @@ p{
 
 iframe{
   visibility: hidden;
+}
+
+.texton{
+  color:green;
+}
+
+.textoff{
+  color:red;
 }
